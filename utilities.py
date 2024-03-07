@@ -5,6 +5,24 @@ import numpy as np
 import networkx as nx
 import os
 
+def compute_distrib(df, col):
+    stats_df = df.groupby(col)[col].agg('count').pipe(pd.DataFrame).rename(columns={col: 'frequency'})
+    # PDF
+    stats_df['pdf'] = stats_df['frequency'] / sum(stats_df['frequency'])
+    # CDF
+    stats_df['cdf'] = stats_df['pdf'].cumsum()
+    # modifications
+    stats_df = stats_df.reset_index().rename(columns={col:"x"})
+    stats_df["col"] = col
+    stats_df = stats_df.groupby('frequency').size()
+    stats_df = stats_df / stats_df.sum()
+    stats_df = stats_df.cumsum()
+    # rename columns
+    stats_df = stats_df.reset_index().rename(columns={0:"cdf", "frequency":"x"})
+    stats_df = stats_df.set_index("x")
+    cdf = pd.Series(stats_df['cdf'])
+    return cdf
+
 def boolMapping(b):
     if b == True:
         return 1
