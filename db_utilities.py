@@ -6,6 +6,7 @@ import os
 import pickle 
 import pandas as pd
 import numpy as np
+pd.set_option('future.no_silent_downcasting', True)
 
 # MongoDB URI
 uri = 'mongodb://localhost:27017'
@@ -153,6 +154,7 @@ def get_ch_info_by_id(ch_id, db_name='Telegram_test'):
     ch_info_df = pd.DataFrame(ch_info, index=[0]).rename(columns={'_id':'ch_id'})
     ch_info_df[ch_info_df.columns] = ch_info_df[ch_info_df.columns].fillna(value=np.nan)
     ch_info_df['ch_id'] = ch_info_df['ch_id'].astype(int)
+    ch_info_df['creation_date'] = ch_info_df['creation_date'].astype(int)
     return ch_info_df
 
 def get_chs_info_by_ids(ch_ids, db_name='Telegram_test'):
@@ -160,6 +162,7 @@ def get_chs_info_by_ids(ch_ids, db_name='Telegram_test'):
     chs_info_df = pd.DataFrame(chs_info).rename(columns={'_id':'ch_id'})
     chs_info_df[chs_info_df.columns] = chs_info_df[chs_info_df.columns].fillna(value=np.nan)
     chs_info_df['ch_id'] = chs_info_df['ch_id'].astype(int)
+    chs_info_df['creation_date'] = chs_info_df['creation_date'].astype(int)
     return chs_info_df
 
 def get_msgs_by_ch_id(ch_id, db_name='Telegram_test'):
@@ -168,8 +171,10 @@ def get_msgs_by_ch_id(ch_id, db_name='Telegram_test'):
     media_data = get_channel_by_id(ch_id, db_name=db_name, with_text_msgs=False, with_media_msgs=True)['generic_media']
     text_df = pd.DataFrame.from_dict(text_data, orient='index').reset_index().rename(columns={'index':'msg_id'})
     media_df = pd.DataFrame.from_dict(media_data, orient='index').reset_index().rename(columns={'index':'msg_id'})
-    text_df[text_df.columns] = text_df[text_df.columns].fillna(value=np.nan)
-    media_df[media_df.columns] = media_df[media_df.columns].fillna(value=np.nan)
+    for col in text_df.columns:
+        text_df[col] = text_df[col].infer_objects(copy=False).fillna(np.nan)
+    for col in media_df.columns:
+        media_df[col] = media_df[col].infer_objects(copy=False).fillna(np.nan)
     if text_data == {} and media_data == {}:
         ch_msgs_df = pd.DataFrame(columns)
     elif text_data == {} and media_data != {}:
@@ -185,7 +190,6 @@ def get_msgs_by_ch_id(ch_id, db_name='Telegram_test'):
     ch_msgs_df = ch_msgs_df[columns]
     ch_msgs_df[ch_msgs_df.columns] = ch_msgs_df[ch_msgs_df.columns].fillna(value=np.nan)
     ch_msgs_df['ch_id'] = ch_id
-    ch_msgs_df['msg_id'] = ch_msgs_df['msg_id'].astype(int)
     # not_null_cols
     ch_msgs_df = ch_msgs_df.dropna(subset=['ch_id', 'msg_id', 'date', 'is_forwarded'])
     # not_null_together
@@ -193,7 +197,9 @@ def get_msgs_by_ch_id(ch_id, db_name='Telegram_test'):
     # if_forwarded_not_null_cols
     ch_msgs_df = ch_msgs_df[(ch_msgs_df['is_forwarded'] == False) | ((ch_msgs_df['is_forwarded'] == True) & (ch_msgs_df['forwarded_from_id'].notna()) & (ch_msgs_df['forwarded_message_date'].notna()))]
     # sort and reset
+    ch_msgs_df['msg_id'] = ch_msgs_df['msg_id'].astype(int)
     ch_msgs_df = ch_msgs_df.sort_values('msg_id').reset_index(drop=True)
+    ch_msgs_df = ch_msgs_df.rename(columns={'extension': 'media_extension', 'title': 'media_title'})
     return ch_msgs_df
 
 def get_msgs_by_ch_ids(ch_ids, db_name='Telegram_test'):
