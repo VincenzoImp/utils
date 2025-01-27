@@ -26,7 +26,7 @@ def remove_protocol(url):
         return None
     return _url
 
-def get_apex(url_removed_protocol):
+def get_apex(url_removed_protocol=None):
     if not isinstance(url_removed_protocol, str):
         return None
     apex = url_removed_protocol.split('/')[0].lower().split(':')[0]
@@ -34,7 +34,7 @@ def get_apex(url_removed_protocol):
         return None
     return apex
 
-def split_apex(apex, tlds=tlds):
+def split_apex(apex=None, tlds=tlds):
     if not isinstance(apex, str):
         return None, None, None
     second, first, tld = None, None, None
@@ -57,7 +57,7 @@ def split_apex(apex, tlds=tlds):
         tld = None
     return second, first, tld
 
-def get_path(url_removed_protocol):
+def get_path(url_removed_protocol=None):
     if not isinstance(url_removed_protocol, str):
         return None
     path = '/'.join(url_removed_protocol.split('/')[1:]).strip('/')
@@ -65,7 +65,7 @@ def get_path(url_removed_protocol):
         return None
     return path
 
-def get_extension(path):
+def get_extension(path=None):
     if not isinstance(path, str):
         return None
     tail = path.split('/')[-1]
@@ -76,7 +76,7 @@ def get_extension(path):
         return None
     return extension
 
-def get_url_normalized(apex, path):
+def get_url_normalized(apex=None, path=None):
     if not isinstance(path, str):
         if not isinstance(apex, str):
             return None
@@ -87,7 +87,7 @@ def add_url_info(df, url_column, tlds=tlds):
     df['url_normalized'] = df[url_column].apply(remove_protocol)
     df['apex'] = df['url_normalized'].apply(get_apex)
     df['second'], df['first'], df['tld'] = zip(*df['apex'].apply(lambda x: split_apex(x, tlds)))
-    df['path'] = df.apply(lambda x: get_path(x['url_normalized'], x['apex']), axis=1)
+    df['path'] = df.apply(lambda x: get_path(x['url_normalized']), axis=1)
     df['extension'] = df['path'].apply(get_extension)
     df['url_normalized'] = df.apply(lambda x: get_url_normalized(x['apex'], x['path']), axis=1)
 
