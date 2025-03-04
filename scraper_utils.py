@@ -1,6 +1,13 @@
+import time
+from DrissionPage import ChromiumOptions
+from seleniumwire import webdriver
+from DrissionPage.common import Settings
+from DrissionPage import ChromiumPage
+from selenium import webdriver
+from selenium_stealth import stealth
+
+
 def open_stealth_driver(headless=False, maximize=True, options=None):
-    from selenium import webdriver
-    from selenium_stealth import stealth
     if options is None:
         options = webdriver.ChromeOptions()
         if maximize:
@@ -17,12 +24,11 @@ def open_stealth_driver(headless=False, maximize=True, options=None):
             webgl_vendor="Intel Inc.",
             renderer="Intel Iris OpenGL Engine",
             fix_hairline=True,
-            )
+    )
     return driver
+
 
 def open_stealth_driver_wire(headless=False, maximize=True, options=None):
-    from seleniumwire import webdriver
-    from selenium_stealth import stealth
     if options is None:
         options = webdriver.ChromeOptions()
         if maximize:
@@ -39,13 +45,11 @@ def open_stealth_driver_wire(headless=False, maximize=True, options=None):
             webgl_vendor="Intel Inc.",
             renderer="Intel Iris OpenGL Engine",
             fix_hairline=True,
-            )
+    )
     return driver
 
+
 def open_drission_driver(headless=False, no_imgs=True, no_audio=True, singleton_tab_obj=False, options=None):
-    from DrissionPage import ChromiumOptions
-    from DrissionPage import ChromiumPage
-    from DrissionPage.common import Settings
     Settings.singleton_tab_obj = singleton_tab_obj
     if options is None:
         options = ChromiumOptions()
@@ -58,8 +62,8 @@ def open_drission_driver(headless=False, no_imgs=True, no_audio=True, singleton_
     driver = ChromiumPage(addr_or_opts=options)
     return driver
 
+
 def open_firefox_driver(headless=False, maximize=True, options=None):
-    from selenium import webdriver
     if options is None:
         options = webdriver.FirefoxOptions()
         if maximize:
@@ -69,8 +73,8 @@ def open_firefox_driver(headless=False, maximize=True, options=None):
     driver = webdriver.Firefox(options=options)
     return driver
 
+
 def open_firefox_driver_wire(headless=False, maximize=True, options=None):
-    from seleniumwire import webdriver
     if options is None:
         options = webdriver.FirefoxOptions()
         if maximize:
@@ -79,3 +83,17 @@ def open_firefox_driver_wire(headless=False, maximize=True, options=None):
             options.add_argument("--headless")
     driver = webdriver.Firefox(options=options)
     return driver
+
+
+def scrolldown(driver, sleep_time=2, scroll_down=5000):
+    try:
+        position = 0
+        while True:
+            driver.execute_script("window.scrollTo(0, {})".format(position+scroll_down))
+            time.sleep(sleep_time)
+            new_position = driver.execute_script("return window.pageYOffset;")
+            if position == new_position:
+                break
+            position = new_position
+    except:
+        pass
